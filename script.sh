@@ -1,0 +1,1 @@
+python3 test.py --canvas_size 960 --test_folder cropped_bboxes/test/images 

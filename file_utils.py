@@ -3,6 +3,7 @@ import os
 import numpy as np
 import cv2
 import imgproc
+import csv
 
 # borrowed from https://github.com/lengstrom/fast-style-transfer/blob/master/src/utils.py
 def get_files(img_dir):
@@ -30,7 +31,7 @@ def list_files(in_path):
     # gt_files.sort()
     return img_files, mask_files, gt_files
 
-def saveResult(img_file, img, boxes, dirname='./result/', verticals=None, texts=None):
+def saveResult(img_file, img, boxes, res_fn, test_folder, dirname='./result/images/', verticals=None, texts=None):
         """ save text detection result one by one
         Args:
             img_file (str): image file name
@@ -46,15 +47,24 @@ def saveResult(img_file, img, boxes, dirname='./result/', verticals=None, texts=
         filename, file_ext = os.path.splitext(os.path.basename(img_file))
 
         # result directory
-        res_file = dirname + "res_" + filename + '.txt'
-        res_img_file = dirname + "res_" + filename + '.jpg'
+        # res_file = dirname + "res_" + filename + '.txt'
+        res_img_file = dirname + "/res_" + filename + '.jpg'
 
         if not os.path.isdir(dirname):
             os.mkdir(dirname)
-
-        with open(res_file, 'w') as f:
+            
+        fieldnames = ['filename', 'x_min', 'y_min', 'x_max', 'y_max']
+        with open(os.path.join(test_folder, res_fn), 'a') as f:
+            csv_writer = csv.DictWriter(f, fieldnames)
             for i, box in enumerate(boxes):
                 poly = np.array(box).astype(np.int32).reshape((-1))
+                x_min = min(poly[0], poly[6])
+                y_min = min(poly[1], poly[3])
+                x_max = max(poly[2], poly[4])
+                y_max = max(poly[5], poly[7])
+                csv_writer.writerow({'filename':filename, 'x_min':x_min, 'y_min':y_min, 'x_max':x_max, 'y_max':y_max})
+                poly = np.array([x_min, y_min, x_max, y_min, x_max, y_max, x_min, y_max]).astype(np.int32)
+                # poly = np.array([x_min, y_min, x_max, y_max]).astype(np.int32)
                 strResult = ','.join([str(p) for p in poly]) + '\r\n'
                 f.write(strResult)
 
